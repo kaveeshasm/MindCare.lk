@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="ai-chat" options={{ headerShown: false }} />
         <Stack.Screen name="counselors" options={{ headerShown: false }} />
+        <Stack.Screen name="schedule-session" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />

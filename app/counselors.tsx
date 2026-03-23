@@ -119,7 +119,25 @@ export default function CounselorsPage() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.bookButton} activeOpacity={0.88}>
+              <TouchableOpacity
+                style={styles.bookButton}
+                activeOpacity={0.88}
+                onPress={() =>
+                  router.push({
+                    pathname: '/schedule-session',
+                    params: {
+                      name: item.name,
+                      title: item.title
+                        .toLowerCase()
+                        .split(' ')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' '),
+                      years: item.years,
+                      avatar: item.avatar,
+                      tags: item.tags.slice(0, 2).join(','),
+                    },
+                  })
+                }>
                 <Text style={styles.bookText}>Book Session</Text>
               </TouchableOpacity>
             </View>
