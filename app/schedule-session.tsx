@@ -141,8 +141,8 @@ export default function ScheduleSessionPage() {
                 </Text>
                 <View style={styles.counselorFooter}>
                   <View style={styles.tagRow}>
-                    {counselorTags.map((tag) => (
-                      <Text key={tag} style={styles.tagText}>
+                    {counselorTags.map((tag, index) => (
+                      <Text key={`${tag}-${index}`} style={styles.tagText}>
                         {tag}
                       </Text>
                     ))}
@@ -181,8 +181,8 @@ export default function ScheduleSessionPage() {
               <Text style={styles.calendarHint}>Choose your preferred date</Text>
 
               <View style={styles.weekRow}>
-                {WEEK_DAYS.map((day) => (
-                  <Text key={day} style={styles.weekDay}>
+                {WEEK_DAYS.map((day, index) => (
+                  <Text key={`${day}-${index}`} style={styles.weekDay}>
                     {day}
                   </Text>
                 ))}
@@ -231,12 +231,12 @@ export default function ScheduleSessionPage() {
             </View>
 
             <View style={styles.slotGrid}>
-              {SLOT_LABELS.map((slot) => {
+              {SLOT_LABELS.map((slot, index) => {
                 const isActive = slot === selectedSlot;
 
                 return (
                   <TouchableOpacity
-                    key={slot}
+                    key={`${slot}-${index}`}
                     style={[styles.slotButton, isActive && styles.slotButtonActive]}
                     activeOpacity={0.88}
                     onPress={() => setSelectedSlot(slot)}>
