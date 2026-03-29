@@ -147,7 +147,22 @@ export default function ScheduleSessionPage() {
                       </Text>
                     ))}
                   </View>
-                  <TouchableOpacity style={styles.profileButton} activeOpacity={0.85}>
+                  
+                  {/* Updated Navigation logic for the existing View Profile button */}
+                  <TouchableOpacity 
+                    style={styles.profileButton} 
+                    activeOpacity={0.85}
+                    onPress={() => router.push({
+                      pathname: '/doctor_profile',
+                      params: {
+                        name: counselorName,
+                        title: counselorTitle,
+                        years: counselorYears,
+                        avatar: counselorAvatar,
+                        tags: counselorTags.join(',')
+                      }
+                    })}
+                  >
                     <Text style={styles.profileButtonText}>View Profile</Text>
                   </TouchableOpacity>
                 </View>
@@ -310,6 +325,7 @@ export default function ScheduleSessionPage() {
 }
 
 const styles = StyleSheet.create({
+  
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
