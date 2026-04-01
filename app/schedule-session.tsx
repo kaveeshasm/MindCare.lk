@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { addBookedSession } from '@/components/session-store';
 
 type ConsultationMode = 'video' | 'voice';
 
@@ -25,9 +26,9 @@ function formatMonthYear(date: Date) {
 
 function formatSummaryDate(date: Date) {
   return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
+    year: 'numeric',
   });
 }
 
@@ -116,6 +117,20 @@ export default function ScheduleSessionPage() {
 
     const [year, month] = isoDate.split('-').map(Number);
     setVisibleMonth(new Date(year, month - 1, 1));
+  };
+
+  const handleConfirmBooking = () => {
+    addBookedSession({
+      id: `session-${Date.now()}`,
+      doctor: counselorName,
+      specialty: counselorTitle,
+      date: formatSummaryDate(selectedDateObject),
+      time: selectedSlot,
+      status: 'Upcoming',
+      actions: true,
+    });
+
+    router.replace('/(main-tabs)/profile');
   };
 
   return (
@@ -296,26 +311,26 @@ export default function ScheduleSessionPage() {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.confirmButton} activeOpacity={0.9}>
+          <TouchableOpacity style={styles.confirmButton} activeOpacity={0.9} onPress={handleConfirmBooking}>
             <Text style={styles.confirmText}>Confirm Booking</Text>
           </TouchableOpacity>
         </ScrollView>
 
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/home')}>
-            <Feather name="home" size={18} color="#9AA3AE" />
+            <Feather name="home" size={16} color="#8E969F" />
             <Text style={styles.navText}>Home</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/ai-chat')}>
-            <MaterialCommunityIcons name="robot-outline" size={18} color="#9AA3AE" />
-            <Text style={styles.navText}>AI Chat</Text>
+            <Feather name="message-square" size={16} color="#8E969F" />
+            <Text style={styles.navText}>Chat</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/counselors')}>
-            <Feather name="users" size={18} color="#2F88E8" />
+            <Feather name="users" size={16} color="#30353B" />
             <Text style={styles.navActive}>Counselors</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/profile')}>
-            <Feather name="user" size={18} color="#9AA3AE" />
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('./profile')}>
+            <Feather name="user" size={16} color="#8E969F" />
             <Text style={styles.navText}>Profile</Text>
           </TouchableOpacity>
         </View>
@@ -687,31 +702,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 66,
+    height: 62,
     borderTopWidth: 1,
-    borderTopColor: '#E2E7EE',
+    borderTopColor: '#ECECEC',
     backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
   },
   navItem: {
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 3,
+    minWidth: 60,
   },
   navActive: {
     fontFamily: 'Inter',
     fontSize: 11,
     lineHeight: 14,
-    color: '#2F88E8',
+    color: '#30353B',
     fontWeight: '700',
   },
   navText: {
     fontFamily: 'Inter',
     fontSize: 11,
     lineHeight: 14,
-    color: '#97A0AB',
-    fontWeight: '600',
+    color: '#8E969F',
+    fontWeight: '500',
   },
 });

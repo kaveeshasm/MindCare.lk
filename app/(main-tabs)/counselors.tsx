@@ -154,24 +154,6 @@ export default function CounselorsPage() {
           </View>
         </ScrollView>
 
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/home')}>
-            <Feather name="home" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/ai-chat')}>
-            <MaterialCommunityIcons name="robot-outline" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>AI Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85}>
-            <Feather name="users" size={16} color="#2F88E8" />
-            <Text style={styles.navActive}>Counselors</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/profile')}>
-            <Feather name="user" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>Profile</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -416,37 +398,5 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     color: '#8C96A3',
     fontWeight: '500',
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 62,
-    borderTopWidth: 1,
-    borderTopColor: '#D8DFE7',
-    backgroundColor: '#F4F7FB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 12,
-  },
-  navItem: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  navActive: {
-    fontFamily: 'Inter',
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#2F88E8',
-    fontWeight: '700',
-  },
-  navText: {
-    fontFamily: 'Inter',
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#97A0AB',
-    fontWeight: '600',
   },
 });

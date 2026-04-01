@@ -121,20 +121,20 @@ export default function DoctorProfilePage() {
 
         {/* Integrated Bottom Bar */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/home')}>
-            <Feather name="home" size={18} color="#9AA3AE" />
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/home')}>
+            <Feather name="home" size={16} color="#8E969F" />
             <Text style={styles.navText}>Home</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/ai-chat')}>
-            <MaterialCommunityIcons name="robot-outline" size={18} color="#9AA3AE" />
-            <Text style={styles.navText}>AI Chat</Text>
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/ai-chat')}>
+            <Feather name="message-square" size={16} color="#8E969F" />
+            <Text style={styles.navText}>Chat</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/counselors')}>
-            <Feather name="users" size={18} color="#2F88E8" />
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/counselors')}>
+            <Feather name="users" size={16} color="#30353B" />
             <Text style={styles.navActive}>Counselors</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Feather name="user" size={18} color="#9AA3AE" />
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('./profile')}>
+            <Feather name="user" size={16} color="#8E969F" />
             <Text style={styles.navText}>Profile</Text>
           </TouchableOpacity>
         </View>
@@ -223,8 +223,8 @@ const styles = StyleSheet.create({
   bookButton: { height: 50, borderRadius: 12, backgroundColor: '#2D7BF0', alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   bookButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
 
-  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 66, borderTopWidth: 1, borderTopColor: '#E2E7EE', backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
-  navItem: { alignItems: 'center' },
-  navActive: { fontSize: 11, color: '#2F88E8', fontWeight: '700' },
-  navText: { fontSize: 11, color: '#97A0AB' },
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 62, borderTopWidth: 1, borderTopColor: '#ECECEC', backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 6 },
+  navItem: { alignItems: 'center', justifyContent: 'center', gap: 3, minWidth: 60 },
+  navActive: { fontFamily: 'Inter', fontSize: 11, lineHeight: 14, color: '#30353B', fontWeight: '700' },
+  navText: { fontFamily: 'Inter', fontSize: 11, lineHeight: 14, color: '#8E969F', fontWeight: '500' },
 });
