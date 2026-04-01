@@ -6,7 +6,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(main-tabs)',
 };
 
 export default function RootLayout() {
@@ -16,17 +16,14 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(main-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="counselor-register" options={{ headerShown: false }} />
         <Stack.Screen name="counselor-profile" options={{ headerShown: false }} />
         <Stack.Screen name="counselor-dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="counselor-schedule" options={{ headerShown: false }} />
         <Stack.Screen name="call-selection" options={{ headerShown: false }} />
         <Stack.Screen name="video-call-room" options={{ headerShown: false }} />
-        <Stack.Screen name="ai-chat" options={{ headerShown: false }} />
-        <Stack.Screen name="counselors" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="schedule-session" options={{ headerShown: false }} />
         <Stack.Screen name="doctor_profile" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
