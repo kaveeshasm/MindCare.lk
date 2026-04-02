@@ -33,7 +33,10 @@ export default function RoleSelectionScreen() {
       router.push('/counselor-register');
       return;
     }
-    router.replace('/home');
+    else{
+      router.push('/member-register');
+    }
+    
   };
 
   const handleSignIn = () => {
