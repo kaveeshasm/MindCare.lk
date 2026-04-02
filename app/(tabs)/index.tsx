@@ -39,11 +39,6 @@ export default function RoleSelectionScreen() {
     
   };
 
-  const handleSignIn = () => {
-    void Haptics.selectionAsync();
-    router.push('/login');
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -68,13 +63,6 @@ export default function RoleSelectionScreen() {
             <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
           </TouchableOpacity>
         ))}
-
-        <View style={styles.bottomRow}>
-          <Text style={styles.bottomText}>Already have an account?</Text>
-          <TouchableOpacity activeOpacity={0.85} onPress={handleSignIn}>
-            <Text style={styles.bottomLink}>Sign in</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );

@@ -77,7 +77,7 @@ export default function CounselorRegisterScreen() {
 
   const handleSignIn = () => {
     void Haptics.selectionAsync();
-    router.push('/login');
+    router.push('/member-login');
   };
 
   return (
