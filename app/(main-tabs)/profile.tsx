@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RescheduleModal, type RescheduleSession } from '@/components/RescheduleModal';
@@ -64,10 +64,10 @@ const personalInfo: InfoField[] = [
 ];
 
 const initialProfile: ProfileForm = {
-  name: 'John Doe',
-  email: 'john.doe@mail.com',
-  gender: 'Male',
-  dob: 'January 15, 1990',
+  name: '',
+  email: '',
+  gender: '',
+  dob: '',
 };
 
 function InfoFieldCard({
@@ -135,8 +135,25 @@ export default function ProfilePage() {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [detailsSectionY, setDetailsSectionY] = useState(0);
   const bookedSessions = useBookedSessions();
+  const [isInfoFilled, setIsInfoFilled] = useState(false);
 
   const upcomingCount = bookedSessions.filter((session) => session.status === 'Upcoming').length;
+
+  const params = useLocalSearchParams<{ filledName?: string; filledEmail?: string; filledGender?: string; filledDob?: string }>();
+
+  useEffect(() => {
+    if (params.filledName) {
+      const filled = {
+        name: params.filledName ?? profile.name,
+        email: params.filledEmail ?? profile.email,
+        gender: params.filledGender ?? profile.gender,
+        dob: params.filledDob ?? profile.dob,
+      };
+      setProfile(filled);
+      setDraftProfile(filled);
+      setIsInfoFilled(true);
+    }
+  }, [params.filledName]);
 
   const handleEditPress = () => {
     if (isEditing) {
@@ -254,22 +271,31 @@ export default function ProfilePage() {
             </View>
           </View>
           <View style={styles.editProfile}>
-            {isEditing ? (
-                  <View style={styles.editActions}>
-                    <TouchableOpacity style={styles.outlinedAction} activeOpacity={0.9} onPress={handleCancel}>
-                      <Text style={styles.outlinedActionText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.primaryActionCompact} activeOpacity={0.9} onPress={handleEditPress}>
-                      <Text style={styles.primaryActionText}>Save Changes</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity style={styles.primaryAction} activeOpacity={0.9} onPress={handleEditPress}>
-                    <Feather name="edit-3" size={16} color="#FFFFFF" />
-                    <Text style={styles.primaryActionText}>Edit Profile</Text>
-                  </TouchableOpacity>
-                )}
-          </View>
+  {!isInfoFilled ? (
+    <TouchableOpacity
+      style={styles.fillInfoAction}
+      activeOpacity={0.9}
+      onPress={() => router.push('/member-information-form')}
+    >
+      <Feather name="user-plus" size={16} color="#FFFFFF" />
+      <Text style={styles.primaryActionText}>Fill Personal Information</Text>
+    </TouchableOpacity>
+  ) : isEditing ? (
+    <View style={styles.editActions}>
+      <TouchableOpacity style={styles.outlinedAction} activeOpacity={0.9} onPress={handleCancel}>
+        <Text style={styles.outlinedActionText}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.primaryActionCompact} activeOpacity={0.9} onPress={handleEditPress}>
+        <Text style={styles.primaryActionText}>Save Changes</Text>
+      </TouchableOpacity>
+    </View>
+  ) : (
+    <TouchableOpacity style={styles.primaryAction} activeOpacity={0.9} onPress={handleEditPress}>
+      <Feather name="edit-3" size={16} color="#FFFFFF" />
+      <Text style={styles.primaryActionText}>Edit Profile</Text>
+    </TouchableOpacity>
+  )}
+</View>
 
           <View style={styles.stickySessionsHeader}>
             <SectionHeader
@@ -613,6 +639,21 @@ const styles = StyleSheet.create({
     paddingHorizontal:20,
     paddingBottom: 16,
   },
+  fillInfoAction: {
+  marginTop: 4,
+  height: 46,
+  borderRadius: 12,
+  backgroundColor: '#1B9C4B',  // green to distinguish from Edit
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'row',
+  gap: 8,
+  shadowColor: '#1B9C4B',
+  shadowOpacity: 0.18,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 4,
+},
   upcomingCountPill: {
     borderRadius: 999,
     backgroundColor: '#2F88E8',

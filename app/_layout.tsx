@@ -33,6 +33,10 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="member-information-form"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="counselor-profile"
           options={{ headerShown: false }}
         />
