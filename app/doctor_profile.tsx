@@ -105,7 +105,8 @@ export default function DoctorProfilePage() {
               <Text style={styles.sectionTitle}>PATIENT FEEDBACK</Text>
             </View>
             <FeedbackItem name="Emily Rodriguez" date="March 2, 2026" text="Dr. Jenkins is incredibly empathetic and professional. Her approach helped me significantly." />
-            <TouchableOpacity style={styles.viewAllButton}>
+            <TouchableOpacity style={styles.viewAllButton}
+            onPress={() => router.push('/reviews')}>
               <Text style={styles.viewAllText}>View All Reviews (127)</Text>
             </TouchableOpacity>
           </View>
