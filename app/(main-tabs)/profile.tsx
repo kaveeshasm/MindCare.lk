@@ -253,6 +253,23 @@ export default function ProfilePage() {
               ))}
             </View>
           </View>
+          <View style={styles.editProfile}>
+            {isEditing ? (
+                  <View style={styles.editActions}>
+                    <TouchableOpacity style={styles.outlinedAction} activeOpacity={0.9} onPress={handleCancel}>
+                      <Text style={styles.outlinedActionText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.primaryActionCompact} activeOpacity={0.9} onPress={handleEditPress}>
+                      <Text style={styles.primaryActionText}>Save Changes</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={styles.primaryAction} activeOpacity={0.9} onPress={handleEditPress}>
+                    <Feather name="edit-3" size={16} color="#FFFFFF" />
+                    <Text style={styles.primaryActionText}>Edit Profile</Text>
+                  </TouchableOpacity>
+                )}
+          </View>
 
           <View style={styles.stickySessionsHeader}>
             <SectionHeader
@@ -321,23 +338,7 @@ export default function ProfilePage() {
             </View>
 
             <View style={styles.actionPanel}>
-              <SectionHeader title="Account Actions" />
-
-              {isEditing ? (
-                <View style={styles.editActions}>
-                  <TouchableOpacity style={styles.outlinedAction} activeOpacity={0.9} onPress={handleCancel}>
-                    <Text style={styles.outlinedActionText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.primaryActionCompact} activeOpacity={0.9} onPress={handleEditPress}>
-                    <Text style={styles.primaryActionText}>Save Changes</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.primaryAction} activeOpacity={0.9} onPress={handleEditPress}>
-                  <Feather name="edit-3" size={16} color="#FFFFFF" />
-                  <Text style={styles.primaryActionText}>Edit Profile</Text>
-                </TouchableOpacity>
-              )}
+              <SectionHeader title="Account Actions" />          
 
               <TouchableOpacity style={styles.logoutButton} activeOpacity={0.9} onPress={handleLogout}>
                 <View style={styles.logoutIconWrap}>
@@ -606,6 +607,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     borderBottomWidth: 1,
     borderBottomColor: '#D5E0ED',
+  },
+  editProfile: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal:20,
+    paddingBottom: 16,
   },
   upcomingCountPill: {
     borderRadius: 999,
