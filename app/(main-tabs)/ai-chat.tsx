@@ -1,7 +1,6 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 
 export default function AiChatPage() {
   return (
@@ -117,24 +116,6 @@ export default function AiChatPage() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/home')}>
-            <Feather name="home" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="robot-outline" size={16} color="#2F88E8" />
-            <Text style={styles.navActive}>AI Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/counselors')}>
-            <Feather name="users" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>Counselors</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={() => router.replace('/profile')}>
-            <Feather name="user" size={16} color="#99A2AD" />
-            <Text style={styles.navText}>Profile</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -377,37 +358,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#2F88E8',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 62,
-    borderTopWidth: 1,
-    borderTopColor: '#D8DFE7',
-    backgroundColor: '#F4F7FB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 12,
-  },
-  navItem: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  navActive: {
-    fontFamily: 'Inter',
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#2F88E8',
-    fontWeight: '700',
-  },
-  navText: {
-    fontFamily: 'Inter',
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#97A0AB',
-    fontWeight: '600',
   },
 });

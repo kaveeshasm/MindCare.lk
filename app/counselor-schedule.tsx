@@ -196,15 +196,15 @@ export default function CounselorScheduleScreen() {
 
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={goOverview}>
-            <Feather name="grid" size={24} color="#7F8695" />
+            <Feather name="grid" size={16} color="#8E969F" />
             <Text style={styles.navText}>Overview</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85}>
-            <Feather name="calendar" size={24} color="#2F88E8" />
+            <Feather name="calendar" size={16} color="#30353B" />
             <Text style={styles.navActive}>Schedule</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.85} onPress={goProfile}>
-            <Feather name="user" size={24} color="#7F8695" />
+            <Feather name="user" size={16} color="#8E969F" />
             <Text style={styles.navText}>My Profile</Text>
           </TouchableOpacity>
         </View>
@@ -518,31 +518,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 78,
+    height: 62,
     borderTopWidth: 1,
-    borderTopColor: '#D4DAE5',
-    backgroundColor: '#F5F8FC',
+    borderTopColor: '#ECECEC',
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 16,
+    paddingHorizontal: 6,
   },
   navItem: {
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    gap: 3,
+    minWidth: 60,
   },
   navText: {
     fontFamily: 'Inter',
     fontSize: 11,
     lineHeight: 14,
-    color: '#737C8C',
-    fontWeight: '700',
+    color: '#8E969F',
+    fontWeight: '500',
   },
   navActive: {
     fontFamily: 'Inter',
     fontSize: 11,
     lineHeight: 14,
-    color: '#2F88E8',
-    fontWeight: '800',
+    color: '#30353B',
+    fontWeight: '700',
   },
 });

@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
@@ -77,7 +77,7 @@ export default function CounselorRegisterScreen() {
 
   const handleSignIn = () => {
     void Haptics.selectionAsync();
-    router.push('/counselor-login');
+    router.push('/member-login');
   };
 
   return (
@@ -85,7 +85,7 @@ export default function CounselorRegisterScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>join Mindcare and start your journey to wellness</Text>
-        <Text style={styles.roleText}>I am a counselor</Text>
+        <Text style={styles.roleText}>I am a member</Text>
 
         <View style={styles.formPanel}>
           <View pointerEvents="none" style={styles.bottomArc} />
@@ -94,26 +94,7 @@ export default function CounselorRegisterScreen() {
             showsVerticalScrollIndicator={false}
             bounces={false}>
             <View style={styles.iconTile}>
-              <MaterialCommunityIcons name="stethoscope" size={43} color="#FFFFFF" />
-            </View>
-
-            <Text style={styles.label}>Mr/ Mrs/ Ms</Text>
-            <TouchableOpacity style={styles.inputWrap} activeOpacity={0.85} onPress={handleSelectSalutation}>
-              <Feather name="user" size={18} color="#5D5D5D" />
-              <Text style={styles.input}>{salutation}</Text>
-              <Feather name="chevron-down" size={20} color="#8A8A8A" />
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputWrap}>
-              <Feather name="user" size={18} color="#5D5D5D" />
-              <TextInput
-                style={styles.input}
-                placeholder="John Doe"
-                placeholderTextColor="#828282"
-                value={fullName}
-                onChangeText={setFullName}
-              />
+              <Ionicons name="heart" size={42} color="#FFFFFF" />
             </View>
 
             <Text style={styles.label}>Email</Text>
@@ -149,11 +130,12 @@ export default function CounselorRegisterScreen() {
               </TouchableOpacity>
             </View>
 
+            <Text style={styles.label}>Confirm Password</Text>
             <View style={styles.inputWrap}>
               <Feather name="lock" size={18} color="#5D5D5D" />
               <TextInput
                 style={styles.input}
-                placeholder="Confirm Password"
+                placeholder="Re enter the Password"
                 placeholderTextColor="#828282"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -254,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    marginTop: 8,
+    marginTop: 20,
     marginBottom: 4,
     fontFamily: 'Inter',
     fontSize: 12.5,
@@ -276,7 +258,7 @@ const styles = StyleSheet.create({
     color: '#232323',
   },
   signUpButton: {
-    marginTop: 12,
+    marginTop: 50,
     height: 45,
     borderRadius: 14,
     backgroundColor: '#2F88E8',
@@ -323,13 +305,13 @@ const styles = StyleSheet.create({
   },
   bottomArc: {
     position: 'absolute',
-    width: 400,
-    height: 290,
+    width: 430,
+    height: 320,
     backgroundColor: '#2F88E8',
     left: -70,
     bottom: -230,
-    borderTopLeftRadius: 5000,
-    borderTopRightRadius: 1400,
+    borderTopLeftRadius: 5400,
+    borderTopRightRadius: 2100,
     opacity: 0.96,
     zIndex: 0,
   },

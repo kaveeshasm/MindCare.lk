@@ -33,12 +33,10 @@ export default function RoleSelectionScreen() {
       router.push('/counselor-register');
       return;
     }
-    router.replace('/home');
-  };
-
-  const handleSignIn = () => {
-    void Haptics.selectionAsync();
-    router.push('/login');
+    else{
+      router.push('/member-register');
+    }
+    
   };
 
   return (
@@ -65,13 +63,6 @@ export default function RoleSelectionScreen() {
             <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
           </TouchableOpacity>
         ))}
-
-        <View style={styles.bottomRow}>
-          <Text style={styles.bottomText}>Already have an account?</Text>
-          <TouchableOpacity activeOpacity={0.85} onPress={handleSignIn}>
-            <Text style={styles.bottomLink}>Sign in</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
