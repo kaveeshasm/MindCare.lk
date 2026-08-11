@@ -156,25 +156,25 @@ export default function HomePage() {
     try {
       const data = await getArticles();
       const articlesArray = Array.isArray(data) ? data : data?.items || [];
-      
+
       console.log(`Successfully fetched ${articlesArray.length} articles from Blogger`);
 
 
       const validMoods = ["happy", "calm", "manic", "angry", "sad"];
 
       const formatted: ReadCard[] = articlesArray.slice(0, 10).map((item: any, index: number) => {
-        
+
         const rawLabels = item.labels || [];
         const lowercaseLabels = rawLabels.map((l: any) => String(l).toLowerCase().trim());
 
         const matchedMoods = lowercaseLabels.filter((label: string) => validMoods.includes(label));
 
         let coverPhoto = "https://raw.githubusercontent.com/MindCareLK/MindCare.lk/main/assets/images/ArticleBackground.png"; // Default fallback image
-  
+
         if (item.images && item.images.length > 0) {
           coverPhoto = item.images[0].url;
-        } 
-      
+        }
+
         else if (item.content) {
           const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
           if (imgMatch && imgMatch[1]) {
@@ -189,20 +189,20 @@ export default function HomePage() {
           author: item.author?.displayName || "Admin",
           minutes: "5 min read",
           image: coverPhoto,
-          moods: matchedMoods.length > 0 ? matchedMoods : validMoods, 
+          moods: matchedMoods.length > 0 ? matchedMoods : validMoods,
         };
       });
 
       console.log("FORMATTED MOODS FOR FIRST ARTICLE:", formatted[0]?.moods);
       setReads(formatted);
-      
+
     } catch (error) {
       console.log("API Error in fetchArticles:", error);
     }
   };
 
   const filteredReads = reads.filter((article) =>
-  article.moods.includes(selectedMood)
+    article.moods.includes(selectedMood)
   );
 
   return (

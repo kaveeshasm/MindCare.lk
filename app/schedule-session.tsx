@@ -1,13 +1,13 @@
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Alert, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { addBookedSession } from '@/components/session-store';
 import { useAuthContext } from '@/components/AuthContext';
 import AuthRequiredModal from '@/components/AuthRequiredModal';
+import { addBookedSession } from '@/components/session-store';
 import { db } from '@/lib/firebase';
-import { collection, query, where, doc, onSnapshot } from 'firebase/firestore';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ConsultationMode = 'video' | 'voice';
 
@@ -238,7 +238,7 @@ export default function ScheduleSessionPage() {
   // Fetch counselor profile schedules in real-time
   useEffect(() => {
     if (!params.uid || !db) return;
-    
+
     const docRef = doc(db, 'counselors', params.uid);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -257,7 +257,7 @@ export default function ScheduleSessionPage() {
   // Fetch booked slots on selectedDate in real-time
   useEffect(() => {
     if (!params.uid || !selectedDate || !db) return;
-    
+
     const q = query(
       collection(db, 'appointments'),
       where('counselorUid', '==', params.uid),
@@ -271,7 +271,7 @@ export default function ScheduleSessionPage() {
     }, (err) => {
       console.error("Error listening to booked slots:", err);
     });
-    
+
     return () => unsubscribe();
   }, [params.uid, selectedDate, selectedDateObject]);
 
@@ -318,7 +318,7 @@ export default function ScheduleSessionPage() {
     const isCurrentSlotBooked = bookedSlots.includes(selectedSlot);
     const isCurrentSlotActive = activeSlots.includes(selectedSlot);
     const isCurrentSlotPast = isToday && getSlotDateTime(selectedSlot) < now;
-    
+
     if (isCurrentSlotBooked || !isCurrentSlotActive || isCurrentSlotPast) {
       const firstAvailable = activeSlots.find((slot) => {
         const booked = bookedSlots.includes(slot);
@@ -445,10 +445,10 @@ export default function ScheduleSessionPage() {
                       </Text>
                     ))}
                   </View>
-                  
+
                   {/* Updated Navigation logic for the existing View Profile button */}
-                  <TouchableOpacity 
-                    style={styles.profileButton} 
+                  <TouchableOpacity
+                    style={styles.profileButton}
                     activeOpacity={0.85}
                     onPress={() => router.push({
                       pathname: '/doctor_profile',
@@ -516,28 +516,28 @@ export default function ScheduleSessionPage() {
 
                   return (
                     <TouchableOpacity
-                       key={day.key}
-                       style={[
-                         styles.dayCell,
-                         !day.isCurrentMonth && styles.dayCellEmpty,
-                         isPastDay && styles.dayCellMuted,
-                         isToday && styles.dayCellHighlighted,
-                         isSelected && styles.dayCellSelected,
-                       ]}
-                       activeOpacity={0.85}
-                       disabled={isPastDay || !day.isoDate}
-                       onPress={() => day.isoDate && handleSelectDate(day.isoDate)}>
-                       <Text
-                         style={[
-                           styles.dayText,
-                           !day.isCurrentMonth && styles.dayTextEmpty,
-                           isPastDay && styles.dayTextMuted,
-                           isToday && styles.dayTextHighlighted,
-                           isSelected && styles.dayTextSelected,
-                         ]}>
-                         {day.dayNumber ?? ''}
-                       </Text>
-                     </TouchableOpacity>
+                      key={day.key}
+                      style={[
+                        styles.dayCell,
+                        !day.isCurrentMonth && styles.dayCellEmpty,
+                        isPastDay && styles.dayCellMuted,
+                        isToday && styles.dayCellHighlighted,
+                        isSelected && styles.dayCellSelected,
+                      ]}
+                      activeOpacity={0.85}
+                      disabled={isPastDay || !day.isoDate}
+                      onPress={() => day.isoDate && handleSelectDate(day.isoDate)}>
+                      <Text
+                        style={[
+                          styles.dayText,
+                          !day.isCurrentMonth && styles.dayTextEmpty,
+                          isPastDay && styles.dayTextMuted,
+                          isToday && styles.dayTextHighlighted,
+                          isSelected && styles.dayTextSelected,
+                        ]}>
+                        {day.dayNumber ?? ''}
+                      </Text>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -673,7 +673,7 @@ export default function ScheduleSessionPage() {
 }
 
 const styles = StyleSheet.create({
-  
+
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
   },
   calendarTitle: {
     fontFamily: 'Inter',
-    fontSize: 16,
+    fontSize: 20,
     lineHeight: 21,
     color: '#1C2430',
     fontWeight: '800',
