@@ -23,10 +23,9 @@ export default function ReviewsPage() {
             <Feather name="chevron-left" size={24} color="#333" />
           </TouchableOpacity>
           <View style={styles.headerTitleWrap}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=100&q=80' }} 
-              style={styles.headerAvatar} 
-            />
+            <View style={styles.headerAvatarPlaceholder}>
+              <Feather name="user" size={16} color="#2F88E8" />
+            </View>
             <View>
               <Text style={styles.headerName}>Dr. Jenkins</Text>
               <Text style={styles.headerSub}>Counseling</Text>
@@ -141,6 +140,7 @@ const styles = StyleSheet.create({
   profile: {alignSelf: 'flex-start'},
   headerTitleWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   headerAvatar: { width: 32, height: 32, borderRadius: 16 },
+  headerAvatarPlaceholder: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#EBF4FF', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DEE4EC' },
   headerName: { fontSize: 15, fontWeight: '800', color: '#141B25' },
   headerSub: { fontSize: 11, color: '#7D8795' },
   content: { padding: 16, paddingBottom: 40 },

@@ -4,6 +4,7 @@ import {
 } from "@/lib/counselors";
 import { getFirebaseConfigError } from "@/lib/firebase";
 import { signInWithNativeGoogle } from "@/lib/native-google-signin";
+import { setExpectedRole } from "@/components/AuthContext";
 
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants, { ExecutionEnvironment } from "expo-constants";
@@ -102,6 +103,7 @@ export default function CounselorRegisterScreen() {
 
     try {
       setIsSubmitting(true);
+      setExpectedRole("counselor");
       await createCounselorAccount({
         salutation: trimmedSalutation,
         fullName: trimmedName,
@@ -112,6 +114,7 @@ export default function CounselorRegisterScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/(counselor-tabs)/profile");
     } catch (error) {
+      setExpectedRole(null);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
       const message =
@@ -163,9 +166,11 @@ export default function CounselorRegisterScreen() {
 
     try {
       setIsGoogleSubmitting(true);
+      setExpectedRole("counselor");
       const tokens = await signInWithNativeGoogle();
 
       if (!tokens) {
+        setExpectedRole(null);
         return;
       }
 

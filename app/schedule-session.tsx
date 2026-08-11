@@ -336,9 +336,7 @@ export default function ScheduleSessionPage() {
   const counselorName = params.name ?? 'Mrs. Dinithi Jayawardena';
   const counselorTitle = params.title ?? 'Clinical Psychologist';
   const counselorYears = params.years ?? '12 years';
-  const counselorAvatar =
-    params.avatar ??
-    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80';
+  const counselorAvatar = params.avatar || '';
 
   const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
 
@@ -431,7 +429,13 @@ export default function ScheduleSessionPage() {
           <View style={styles.sectionWrap}>
             <Text style={styles.sectionLabel}>BOOKING WITH</Text>
             <View style={styles.counselorCard}>
-              <Image source={{ uri: counselorAvatar }} style={styles.counselorAvatar} />
+              {counselorAvatar && !counselorAvatar.includes('unsplash.com') ? (
+                <Image source={{ uri: counselorAvatar }} style={styles.counselorAvatar} />
+              ) : (
+                <View style={styles.counselorAvatarPlaceholder}>
+                  <Ionicons name="person" size={24} color="#2F88E8" />
+                </View>
+              )}
               <View style={styles.counselorInfo}>
                 <Text style={styles.counselorName}>{counselorName}</Text>
                 <Text style={styles.counselorMeta}>
@@ -744,6 +748,16 @@ const styles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: 31,
+  },
+  counselorAvatarPlaceholder: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: '#EBF4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#DEE4EC',
   },
   counselorInfo: {
     flex: 1,

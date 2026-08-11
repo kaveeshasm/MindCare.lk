@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "react-native";
-import React, { useMemo, useState, useRef } from "react";
+import { StatusBar, Alert } from "react-native";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { questions, options } from "../../constants/questions";
 import dataset from "../../constants/dataset.json";
 import { getChatResponse, getFinalSummary, Message, QuestionnaireAnswer } from "../../services/chatbotApi";
+import { useAuthContext } from "../../components/AuthContext";
+import { db } from "../../lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const getLocalSuggestion = (questionText: string, answerText: string): string => {
   try {
@@ -47,6 +50,8 @@ const formatCurrentTime = () => {
 };
 
 export default function AiChatPage() {
+  const { currentUser } = useAuthContext();
+  const [loadingSession, setLoadingSession] = useState(true);
   const [step, setStep] = useState<'welcome' | 'questionnaire' | 'chat' | 'summary'>('welcome');
 
   // Questionnaire States
@@ -75,21 +80,74 @@ export default function AiChatPage() {
   const scrollViewRef = useRef<ScrollView>(null);
   const currentQuestion = questions[currentQuestionIndex];
 
+  // Load chat session from Firestore (chatbot_sessions collection)
+  useEffect(() => {
+    async function loadSession() {
+      if (!currentUser || !db) {
+        setLoadingSession(false);
+        return;
+      }
+      try {
+        const sessionRef = doc(db, "chatbot_sessions", currentUser.uid);
+        const docSnap = await getDoc(sessionRef);
+        if (docSnap.exists()) {
+          const session = docSnap.data();
+          if (session.step) setStep(session.step);
+          if (session.currentQuestionIndex !== undefined) setCurrentQuestionIndex(session.currentQuestionIndex);
+          if (session.answersContext) setAnswersContext(session.answersContext);
+          if (session.messages) setMessages(session.messages);
+          if (session.summary !== undefined) setSummary(session.summary);
+        }
+      } catch (error) {
+        console.error("Failed to load chat session from Firestore:", error);
+      } finally {
+        setLoadingSession(false);
+      }
+    }
+    loadSession();
+  }, [currentUser]);
+
+  // Helper to save chat session to Firestore (chatbot_sessions collection)
+  const saveSession = async (updates: {
+    step?: 'welcome' | 'questionnaire' | 'chat' | 'summary';
+    currentQuestionIndex?: number;
+    answersContext?: QuestionnaireAnswer[];
+    messages?: Message[];
+    summary?: string | null;
+  }) => {
+    if (!currentUser || !db) return;
+    try {
+      const sessionRef = doc(db, "chatbot_sessions", currentUser.uid);
+      await setDoc(sessionRef, updates, { merge: true });
+    } catch (error) {
+      console.error("Failed to save chat session to Firestore:", error);
+    }
+  };
+
   // Starts the assessment
   const handleStart = () => {
     setCurrentQuestionIndex(0);
     setAnswersContext([]);
     setCurrentSuggestion(null);
     setSelectedOptionId(null);
-    setMessages([
+    const initialMessages: Message[] = [
       {
         id: "welcome",
         sender: "assistant",
         text: "ඔබට තවදුරටත් කතා කිරීමට අවශ්‍ය වෙනත් යමක් තිබේද? (ඔබට අවශ්‍ය නැතිනම් පහළ ඇති බොත්තම ඔබා අවසන් යෝජනා ලබා ගන්න)",
         time: formatCurrentTime(),
       },
-    ]);
+    ];
+    setMessages(initialMessages);
     setStep('questionnaire');
+
+    void saveSession({
+      step: 'questionnaire',
+      currentQuestionIndex: 0,
+      answersContext: [],
+      messages: initialMessages,
+      summary: null,
+    });
   };
 
   // Handles questionnaire option click
@@ -114,7 +172,9 @@ export default function AiChatPage() {
       setAnswersContext(prev => {
         // Prevent duplicate answers if they click multiple options before clicking next
         const filtered = prev.filter(ans => ans.questionId !== currentQuestion.id);
-        return [...filtered, newAnswer];
+        const updated = [...filtered, newAnswer];
+        void saveSession({ answersContext: updated });
+        return updated;
       });
       setLoadingSuggestion(false);
       setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
@@ -124,12 +184,15 @@ export default function AiChatPage() {
   // Navigates to next question or chat
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
       setCurrentSuggestion(null);
       setSelectedOptionId(null);
+      void saveSession({ currentQuestionIndex: nextIndex });
       setTimeout(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true }), 50);
     } else {
       setStep('chat');
+      void saveSession({ step: 'chat' });
     }
   };
 
@@ -145,20 +208,26 @@ export default function AiChatPage() {
       time: formatCurrentTime(),
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInputText("");
     setIsSending(true);
+    void saveSession({ messages: updatedMessages });
     setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50);
 
     try {
-      const responseText = await getChatResponse(trimmedInput, answersContext, [...messages, userMsg]);
+      const responseText = await getChatResponse(trimmedInput, answersContext, updatedMessages);
       const botMsg: Message = {
         id: `bot-${Date.now()}`,
         sender: 'assistant',
         text: responseText,
         time: formatCurrentTime(),
       };
-      setMessages(prev => [...prev, botMsg]);
+      setMessages(prev => {
+        const finalMessages = [...prev, botMsg];
+        void saveSession({ messages: finalMessages });
+        return finalMessages;
+      });
     } catch (error) {
       console.error(error);
       const errorMsg: Message = {
@@ -167,7 +236,11 @@ export default function AiChatPage() {
         text: "කණගාටුයි, පිළිතුර ලබාගැනීමේදී ගැටලුවක් ඇතිවිය. කරුණාකර පසුව නැවත උත්සාහ කරන්න.",
         time: formatCurrentTime(),
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages(prev => {
+        const finalMessages = [...prev, errorMsg];
+        void saveSession({ messages: finalMessages });
+        return finalMessages;
+      });
     } finally {
       setIsSending(false);
       setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
@@ -178,15 +251,72 @@ export default function AiChatPage() {
   const handleFinishChat = async () => {
     setStep('summary');
     setLoadingSummary(true);
+    void saveSession({ step: 'summary' });
     try {
       const result = await getFinalSummary(answersContext, messages);
       setSummary(result);
+      void saveSession({ summary: result });
     } catch (error) {
-      setSummary("සාරාංශය ලබාගැනීමේදී දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.");
+      const errorResult = "සාරාංශය ලබාගැනීමේදී දෝෂයක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.";
+      setSummary(errorResult);
+      void saveSession({ summary: errorResult });
     } finally {
       setLoadingSummary(false);
     }
   };
+
+  // Handles starting over / resetting the assessment
+  const handleResetAssessment = () => {
+    Alert.alert(
+      "ඇගයීම නැවත ආරම්භ කරන්නද?",
+      "ඔබ දැනට ලබා දී ඇති සියලුම පිළිතුරු සහ චැට් ඉතිහාසය මකා දැමෙනු ඇත.",
+      [
+        { text: "අවලංගු කරන්න", style: "cancel" },
+        { 
+          text: "ඔව්, නැවත ආරම්භ කරන්න", 
+          style: "destructive",
+          onPress: () => {
+            setStep('welcome');
+            setCurrentQuestionIndex(0);
+            setAnswersContext([]);
+            setCurrentSuggestion(null);
+            setSelectedOptionId(null);
+            const initialMessages = [
+              {
+                id: "welcome",
+                sender: "assistant",
+                text: "ඔබට තවදුරටත් කතා කිරීමට අවශ්‍ය වෙනත් යමක් තිබේද? (ඔබට අවශ්‍ය නැතිනම් පහළ ඇති බොත්තම ඔබා අවසන් යෝජනා ලබා ගන්න)",
+                time: formatCurrentTime(),
+              },
+            ];
+            setMessages(initialMessages);
+            setSummary(null);
+            void saveSession({
+              step: 'welcome',
+              currentQuestionIndex: 0,
+              answersContext: [],
+              messages: initialMessages,
+              summary: null,
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  if (loadingSession) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F2F5F8" translucent={false} />
+        <View style={[styles.container, styles.centerWrapper]}>
+          <ActivityIndicator size="large" color="#2F88E8" />
+          <Text style={{ marginTop: 12, color: "#677489", fontFamily: "Inter", fontSize: 14 }}>
+            සංවාදය සකස් කරමින්...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -202,6 +332,11 @@ export default function AiChatPage() {
             </Text>
           </View>
           <View style={styles.headerActions}>
+            {step !== 'welcome' && (
+              <TouchableOpacity style={styles.iconButton} activeOpacity={0.8} onPress={handleResetAssessment}>
+                <Feather name="rotate-ccw" size={16} color="#E53E3E" />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.iconButton} activeOpacity={0.8}>
               <Feather name="star" size={16} color="#4A5665" />
             </TouchableOpacity>
@@ -384,7 +519,27 @@ export default function AiChatPage() {
             </View>
 
             {!loadingSummary && (
-              <TouchableOpacity style={styles.primaryButton} activeOpacity={0.85} onPress={() => setStep('welcome')}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setStep('welcome');
+                  void saveSession({
+                    step: 'welcome',
+                    currentQuestionIndex: 0,
+                    answersContext: [],
+                    messages: [
+                      {
+                        id: "welcome",
+                        sender: "assistant",
+                        text: "ඔබට තවදුරටත් කතා කිරීමට අවශ්‍ය වෙනත් යමක් තිබේද? (ඔබට අවශ්‍ය නැතිනම් පහළ ඇති බොත්තම ඔබා අවසන් යෝජනා ලබා ගන්න)",
+                        time: formatCurrentTime(),
+                      },
+                    ],
+                    summary: null,
+                  });
+                }}
+              >
                 <Feather name="home" size={16} color="#FFFFFF" />
                 <Text style={styles.primaryButtonText}>මුල් පිටුවට යන්න</Text>
               </TouchableOpacity>
@@ -515,6 +670,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
+    flexShrink: 1,
+    textAlign: "center",
   },
   scrollContent: {
     paddingBottom: 32,
@@ -793,17 +950,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#1ABC9C",
     borderRadius: 14,
     paddingVertical: 14,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     marginBottom: 10,
+    width: "100%",
   },
   finishChatButtonText: {
     fontFamily: "Inter",
     fontSize: 13,
     fontWeight: "700",
     color: "#FFFFFF",
+    flexShrink: 1,
+    textAlign: "center",
   },
   summaryTitleRow: {
     flexDirection: "row",

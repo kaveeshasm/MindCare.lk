@@ -10,8 +10,10 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   serverTimestamp,
   setDoc,
+  where,
 } from "firebase/firestore";
 
 import { auth, db, getFirebaseConfigError } from "@/lib/firebase";
@@ -28,6 +30,7 @@ export type CounselorProfile = {
   bio: string;
   role: "counselor";
   profileCompleted: boolean;
+  avatarUrl?: string;
   schedules?: Record<string, any>;
   createdAt?: unknown;
   updatedAt?: unknown;
@@ -47,6 +50,7 @@ type CounselorProfileUpdateInput = {
   qualifications: string[];
   researchStudies: string[];
   bio: string;
+  avatarUrl?: string;
 };
 
 const counselorCollection = () => {
@@ -67,6 +71,28 @@ const counselorDocRef = (uid: string) => {
 
 const buildDisplayName = (salutation: string, fullName: string) =>
   `${salutation.trim()} ${fullName.trim()}`.trim();
+
+async function getDocWithRetry(docRef: any, maxAttempts = 3): Promise<any> {
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    try {
+      return await getDoc(docRef);
+    } catch (error) {
+      const isPermissionError =
+        error instanceof Error &&
+        (error.message.includes("permission") ||
+          error.message.includes("permission-denied") ||
+          error.message.includes("PERMISSION_DENIED"));
+
+      if (isPermissionError && attempts < maxAttempts - 1) {
+        attempts++;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
 
 export async function createCounselorAccount(input: CounselorSignupInput) {
   if (!auth) {
@@ -169,6 +195,20 @@ export async function signInCounselorWithGoogle(
     accessToken,
   );
   const userCredential = await signInWithCredential(auth, credential);
+
+  // Check if this Google account is already registered as a member using direct document read (permitted for self)
+  if (db) {
+    try {
+      const memberDoc = await getDocWithRetry(doc(db, "members", userCredential.user.uid));
+      if (memberDoc.exists()) {
+        throw new Error("This Google account is already registered as a member.");
+      }
+    } catch (error) {
+      await auth.signOut();
+      throw error;
+    }
+  }
+
   const existingProfile = await getCounselorProfile(userCredential.user.uid);
 
   if (existingProfile) {
@@ -230,6 +270,7 @@ export async function upsertCounselorProfile(
       bio: input.bio,
       role: "counselor",
       profileCompleted: true,
+      avatarUrl: input.avatarUrl ?? existingProfile?.avatarUrl ?? "",
       updatedAt: serverTimestamp(),
       createdAt: existingProfile?.createdAt ?? serverTimestamp(),
     },
@@ -252,6 +293,7 @@ export async function upsertCounselorProfile(
     bio: input.bio,
     role: "counselor" as const,
     profileCompleted: true,
+    avatarUrl: input.avatarUrl ?? existingProfile?.avatarUrl ?? "",
   };
 }
 

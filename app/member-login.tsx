@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { isCurrentUserAdmin } from "@/lib/admin";
+import { setExpectedRole } from "@/components/AuthContext";
 
 export default function LoginScreen() {
   const [emailAddress, setEmailAddress] = useState("");
@@ -41,6 +42,7 @@ export default function LoginScreen() {
     }
 
     try {
+      setExpectedRole("member");
       await signInMember(emailAddress.trim().toLowerCase(), password);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
@@ -51,6 +53,7 @@ export default function LoginScreen() {
         router.replace("/(main-tabs)/profile");
       }
     } catch (error) {
+      setExpectedRole(null);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         "Sign In Failed",
@@ -82,9 +85,11 @@ export default function LoginScreen() {
 
     try {
       setIsGoogleSubmitting(true);
+      setExpectedRole("member");
       const tokens = await signInWithNativeGoogle();
 
       if (!tokens) {
+        setExpectedRole(null);
         return;
       }
 

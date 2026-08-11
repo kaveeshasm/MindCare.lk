@@ -58,22 +58,19 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        const fonts = [
-          Feather.font,
-          Ionicons.font,
-          MaterialCommunityIcons.font,
-          FontAwesome.font,
-          FontAwesome5.font,
-        ];
+        const fontsToLoad = {
+          ...Feather.font,
+          ...Ionicons.font,
+          ...MaterialCommunityIcons.font,
+          ...FontAwesome.font,
+          ...FontAwesome5.font,
+          "Inter": require("../assets/fonts/Inter-Regular.ttf"),
+          "Inter-Regular": require("../assets/fonts/Inter-Regular.ttf"),
+          "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"),
+          "Inter-SemiBold": require("../assets/fonts/Inter-SemiBold.ttf"),
+        };
         
-        // Load fonts in parallel and catch errors individually to handle rejections immediately
-        await Promise.all(
-          fonts.map(f => 
-            Font.loadAsync(f).catch(err => {
-              console.warn("Skipping font asset download error:", err.message || err);
-            })
-          )
-        );
+        await Font.loadAsync(fontsToLoad);
       } catch (e) {
         console.warn("Failed to load assets/fonts:", e);
       } finally {

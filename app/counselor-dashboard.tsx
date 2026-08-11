@@ -190,7 +190,7 @@ export default function CounselorDashboardScreen() {
       }
 
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/counselor-login');
+      router.replace('/(tabs)/role-selection');
     } catch {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Logout Failed', 'Unable to log out right now. Please try again.');

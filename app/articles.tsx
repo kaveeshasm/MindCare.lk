@@ -10,7 +10,17 @@ type ReadCard = {
   title: string;
   author: string;
   minutes: string;
-  image: string;
+  image: any;
+  imageIndex: number;
+  remoteImageUrl?: string;
+};
+
+const extractArticleImage = (item: any) => {
+  if (item.images && item.images[0]?.url) {
+    return item.images[0].url;
+  }
+  const match = item.content?.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
 };
 
 export default function ArticlesScreen() {
@@ -20,33 +30,24 @@ export default function ArticlesScreen() {
     fetchArticles();
   }, []);
 
+  const fallbackImage = require("../assets/images/ArticleBackground.png");
+
   const fetchArticles = async () => {
     try {
       const data = await getArticles();
-      
       const articlesArray = Array.isArray(data) ? data : data?.items || [];
 
       const formatted: ReadCard[] = articlesArray.map((item: any) => {
-        
-        let coverPhoto = "https://raw.githubusercontent.com/MindCareLK/MindCare.lk/main/assets/images/ArticleBackground.png"; 
-
-        if (item.images && item.images.length > 0) {
-          coverPhoto = item.images[0].url;
-        } 
-        else if (item.content) {
-          const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-          if (imgMatch && imgMatch[1]) {
-            coverPhoto = imgMatch[1];
-          }
-        }
-
+        const bloggerImage = extractArticleImage(item);
         return {
           id: item.id,
           category: "BLOG",
           title: item.title ? item.title.replace(/<[^>]+>/g, "") : "Untitled",
           author: item.author?.displayName || "Admin",
           minutes: "5 min read",
-          image: coverPhoto,
+          image: bloggerImage ? { uri: bloggerImage } : fallbackImage,
+          imageIndex: -1,
+          remoteImageUrl: bloggerImage || undefined,
         };
       });
 
@@ -67,9 +68,15 @@ export default function ArticlesScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => router.push(`/article-detail?id=${item.id}` as any)}
+            onPress={() => {
+              if (item.remoteImageUrl) {
+                router.push(`/article-detail?id=${item.id}&image=${encodeURIComponent(item.remoteImageUrl)}` as any);
+              } else {
+                router.push(`/article-detail?id=${item.id}&imageIndex=${item.imageIndex}` as any);
+              }
+            }}
           >
-            <Image source={{ uri: item.image }} style={styles.image} />
+            <Image source={item.image} style={styles.image} />
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.author}>{item.author}</Text>
           </TouchableOpacity>

@@ -1,0 +1,14 @@
+.venv
+venv
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.expo
+.idea
+.vscode
+node_modules

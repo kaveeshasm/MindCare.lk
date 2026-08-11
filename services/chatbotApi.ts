@@ -1,6 +1,20 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+// Resolve host IP dynamically for physical devices on the same local network
+// Resolve host IP dynamically for physical devices on the same local network
+const getHostIP = (): string => {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    return hostUri.split(':')[0];
+  }
+  // Fallback to computer's local network IP for testing standalone builds
+  return '10.181.103.12';
+};
+
+// Production backend hosted on Hugging Face Spaces
+const BASE_URL = "https://tharushatheekshana-mindcare-backend.hf.space";
+// const BASE_URL = `http://${getHostIP()}:5000`; // Local development fallback
 
 export type Message = {
   id: string;

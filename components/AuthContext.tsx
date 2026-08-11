@@ -29,6 +29,12 @@ const emptyProfile: MemberProfile = {
   dob: '',
 };
 
+let expectedRole: 'member' | 'counselor' | null = null;
+
+export function setExpectedRole(role: 'member' | 'counselor' | null) {
+  expectedRole = role;
+}
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -108,9 +114,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (role === 'counselor') {
+              if (expectedRole === 'member') {
+                await auth?.signOut();
+                expectedRole = null;
+                return;
+              }
               setMemberProfile(emptyProfile);
               setUserRole('counselor');
               setIsAuthReady(true);
+              expectedRole = null;
               return;
             }
 
@@ -118,11 +130,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setMemberProfile(emptyProfile);
               setUserRole('admin');
               setIsAuthReady(true);
+              expectedRole = null;
               return;
+            }
+
+            if (role === 'member') {
+              if (expectedRole === 'counselor') {
+                await auth?.signOut();
+                expectedRole = null;
+                return;
+              }
             }
           }
         } catch (e) {
           // Fallback to regular flow on error
+        }
+
+        if (expectedRole === 'counselor') {
+          setMemberProfile(emptyProfile);
+          setUserRole('counselor');
+          setIsAuthReady(true);
+          expectedRole = null;
+          return;
         }
 
         setUserRole('member');
@@ -144,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
         );
         setIsAuthReady(true);
+        expectedRole = null;
       })();
     });
 

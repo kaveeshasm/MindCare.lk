@@ -11,7 +11,7 @@ import AuthRequiredModal from '@/components/AuthRequiredModal';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80';
+const DEFAULT_AVATAR = '';
 
 export default function CounselorsPage() {
   const { userRole } = useAuthContext();
@@ -96,7 +96,7 @@ export default function CounselorsPage() {
                       name: item.displayName || item.fullName,
                       title: item.specialty,
                       years: `${Math.max(item.qualifications.length, 1)} credentials`,
-                      avatar: DEFAULT_AVATAR,
+                      avatar: item.avatarUrl || '',
                       tags: (item.qualifications.length ? item.qualifications : [item.specialty]).slice(0, 2).join(','),
                     },
                   });
@@ -104,7 +104,13 @@ export default function CounselorsPage() {
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.avatarWrap}>
-                    <Image source={{ uri: DEFAULT_AVATAR }} style={styles.avatar} />
+                    {item.avatarUrl ? (
+                      <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <FontAwesome5 name="user-md" size={24} color="#2F88E8" />
+                      </View>
+                    )}
                     <View style={styles.onlineDot} />
                   </View>
                   <View style={styles.cardMain}>
@@ -150,7 +156,7 @@ export default function CounselorsPage() {
                       name: item.displayName || item.fullName,
                       title: item.specialty,
                       years: `${Math.max(item.qualifications.length, 1)} credentials`,
-                      avatar: DEFAULT_AVATAR,
+                      avatar: item.avatarUrl || '',
                       tags: (item.qualifications.length ? item.qualifications : [item.specialty]).slice(0, 2).join(','),
                     },
                   });
@@ -291,8 +297,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   avatarWrap: {
-    width: 44,
-    height: 44,
+    width: 56,
+    height: 56,
+  },
+  avatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EBF4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#DEE4EC',
   },
   avatar: {
     width: 56,
@@ -301,11 +317,11 @@ const styles = StyleSheet.create({
   },
   onlineDot: {
     position: 'absolute',
-    right: -9,
-    bottom: -12,
-    width: 15,
-    height: 15,
-    borderRadius: 10,
+    right: 0,
+    bottom: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: '#2DCB69',
     borderWidth: 1.5,
     borderColor: '#FFFFFF',

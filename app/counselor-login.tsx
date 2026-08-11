@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { signInCounselor, signInCounselorWithGoogle } from "@/lib/counselors";
 import { getFirebaseConfigError } from "@/lib/firebase";
+import { setExpectedRole } from "@/components/AuthContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -52,6 +53,7 @@ export default function LoginScreen() {
 
     try {
       setIsSubmitting(true);
+      setExpectedRole("counselor");
       const profile = await signInCounselor(
         emailAddress.trim().toLowerCase(),
         password,
@@ -64,6 +66,7 @@ export default function LoginScreen() {
           : "/(counselor-tabs)/profile",
       );
     } catch (error) {
+      setExpectedRole(null);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
       const message =
@@ -105,9 +108,11 @@ export default function LoginScreen() {
 
     try {
       setIsGoogleSubmitting(true);
+      setExpectedRole("counselor");
       const tokens = await signInWithNativeGoogle();
 
       if (!tokens) {
+        setExpectedRole(null);
         return;
       }
 

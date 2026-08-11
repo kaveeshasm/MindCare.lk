@@ -5,7 +5,16 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 
 import { auth, db, getFirebaseConfigError } from "@/lib/firebase";
 
@@ -34,6 +43,28 @@ const memberDocRef = (uid: string) => {
 
   return doc(db, "members", uid);
 };
+
+async function getDocWithRetry(docRef: any, maxAttempts = 3): Promise<any> {
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    try {
+      return await getDoc(docRef);
+    } catch (error) {
+      const isPermissionError =
+        error instanceof Error &&
+        (error.message.includes("permission") ||
+          error.message.includes("permission-denied") ||
+          error.message.includes("PERMISSION_DENIED"));
+
+      if (isPermissionError && attempts < maxAttempts - 1) {
+        attempts++;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
 
 function normalizeMemberProfile(
   data: Record<string, unknown>,
@@ -99,6 +130,19 @@ export async function signInMemberWithGoogle(
   );
   const userCredential = await signInWithCredential(auth, credential);
   const user = userCredential.user;
+
+  // Check if this Google account is already registered as a counselor using direct document read (permitted for self)
+  if (db) {
+    try {
+      const counselorDoc = await getDocWithRetry(doc(db, "counselors", user.uid));
+      if (counselorDoc.exists()) {
+        throw new Error("This Google account is already registered as a counselor.");
+      }
+    } catch (error) {
+      await auth.signOut();
+      throw error;
+    }
+  }
 
   const existingProfile = await getMemberProfile(user.uid);
   if (!existingProfile) {

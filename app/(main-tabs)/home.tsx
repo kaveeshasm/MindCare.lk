@@ -1,7 +1,7 @@
 import { useAuthContext } from "@/components/AuthContext";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Image,
   ScrollView,
@@ -11,6 +11,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
+  Pressable,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getArticles } from "../../services/bloggerApi";
@@ -37,8 +40,18 @@ type ReadCard = {
   title: string;
   author: string;
   minutes: string;
-  image: string;
+  image: any;
+  imageIndex: number;
+  remoteImageUrl?: string;
   moods: string[];
+};
+
+const extractArticleImage = (item: any) => {
+  if (item.images && item.images[0]?.url) {
+    return item.images[0].url;
+  }
+  const match = item.content?.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
 };
 
 const moodOptions: MoodOption[] = [
@@ -148,6 +161,73 @@ export default function HomePage() {
     currentUser?.displayName ?? memberProfile.email ?? currentUser?.email,
   );
 
+  // Guided Exercises States
+  const [isBreathingVisible, setIsBreathingVisible] = useState(false);
+  const [breathingPhase, setBreathingPhase] = useState<'Inhale' | 'Hold (In)' | 'Exhale' | 'Hold (Out)'>('Inhale');
+  const [timerCount, setTimerCount] = useState(4);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const [isGroundingVisible, setIsGroundingVisible] = useState(false);
+  const [groundingStep, setGroundingStep] = useState(5);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isBreathingVisible) {
+      setBreathingPhase('Inhale');
+      setTimerCount(4);
+      scaleAnim.setValue(1);
+
+      const phases: ('Inhale' | 'Hold (In)' | 'Exhale' | 'Hold (Out)')[] = [
+        'Inhale',
+        'Hold (In)',
+        'Exhale',
+        'Hold (Out)'
+      ];
+      let currentPhaseIdx = 0;
+      let count = 4;
+
+      // Inhale starts immediately
+      Animated.timing(scaleAnim, {
+        toValue: 1.6,
+        duration: 4000,
+        useNativeDriver: true,
+      }).start();
+
+      interval = setInterval(() => {
+        count -= 1;
+        if (count <= 0) {
+          currentPhaseIdx = (currentPhaseIdx + 1) % 4;
+          const nextPhase = phases[currentPhaseIdx];
+          setBreathingPhase(nextPhase);
+          count = 4;
+
+          // Start corresponding animations
+          if (nextPhase === 'Inhale') {
+            scaleAnim.setValue(1);
+            Animated.timing(scaleAnim, {
+              toValue: 1.6,
+              duration: 4000,
+              useNativeDriver: true,
+            }).start();
+          } else if (nextPhase === 'Exhale') {
+            Animated.timing(scaleAnim, {
+              toValue: 1,
+              duration: 4000,
+              useNativeDriver: true,
+            }).start();
+          }
+        }
+        setTimerCount(count);
+      }, 1000);
+    } else {
+      scaleAnim.setValue(1);
+    }
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isBreathingVisible]);
+
   useEffect(() => {
     fetchArticles();
   }, []);
@@ -159,36 +239,25 @@ export default function HomePage() {
 
       console.log(`Successfully fetched ${articlesArray.length} articles from Blogger`);
 
+      const fallbackImage = require("../../assets/images/ArticleBackground.png");
 
       const validMoods = ["happy", "calm", "manic", "angry", "sad"];
 
-      const formatted: ReadCard[] = articlesArray.slice(0, 10).map((item: any, index: number) => {
-
+      const formatted: ReadCard[] = articlesArray.map((item: any) => {
         const rawLabels = item.labels || [];
         const lowercaseLabels = rawLabels.map((l: any) => String(l).toLowerCase().trim());
-
         const matchedMoods = lowercaseLabels.filter((label: string) => validMoods.includes(label));
-
-        let coverPhoto = "https://raw.githubusercontent.com/MindCareLK/MindCare.lk/main/assets/images/ArticleBackground.png"; // Default fallback image
-
-        if (item.images && item.images.length > 0) {
-          coverPhoto = item.images[0].url;
-        }
-
-        else if (item.content) {
-          const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-          if (imgMatch && imgMatch[1]) {
-            coverPhoto = imgMatch[1];
-          }
-        }
+        const bloggerImage = extractArticleImage(item);
 
         return {
           id: item.id,
-          category: "BLOG",
+          category: item.labels && item.labels.length > 0 ? item.labels[0].toUpperCase() : "BLOG",
           title: item.title ? item.title.replace(/<[^>]+>/g, "") : "Untitled",
           author: item.author?.displayName || "Admin",
           minutes: "5 min read",
-          image: coverPhoto,
+          image: bloggerImage ? { uri: bloggerImage } : fallbackImage,
+          imageIndex: -1,
+          remoteImageUrl: bloggerImage || undefined,
           moods: matchedMoods.length > 0 ? matchedMoods : validMoods,
         };
       });
@@ -203,7 +272,7 @@ export default function HomePage() {
 
   const filteredReads = reads.filter((article) =>
     article.moods.includes(selectedMood)
-  );
+  ).slice(0, 3);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -286,6 +355,14 @@ export default function HomePage() {
                     : styles.copingCardCool,
                 ]}
                 activeOpacity={0.88}
+                onPress={() => {
+                  if (card.id === "1") {
+                    setIsBreathingVisible(true);
+                  } else {
+                    setGroundingStep(5);
+                    setIsGroundingVisible(true);
+                  }
+                }}
               >
                 <View style={styles.copingIcon}>
                   <Feather name={card.icon} size={16} color="#434C58" />
@@ -311,36 +388,46 @@ export default function HomePage() {
 
           <Text style={styles.readsTitle}>Mindful Reads</Text>
 
-          {filteredReads.map((item) => (
-            <TouchableOpacity
-              style={styles.readCard}
-              key={item.id}
-              activeOpacity={0.85}
-              onPress={() =>
-                router.push(`/article-detail?id=${item.id}` as any)
-              }
-            >
-              <View style={styles.readImageWrap}>
-                <Image source={{ uri: item.image }} style={styles.readImage} />
-                <View style={styles.categoryTag}>
-                  <Text style={styles.categoryText}>{item.category}</Text>
+          {filteredReads.length === 0 ? (
+            <View style={styles.noReadsWrap}>
+              <Text style={styles.noReadsText}>No wellness articles found for this mood.</Text>
+            </View>
+          ) : (
+            filteredReads.map((item) => (
+              <TouchableOpacity
+                style={styles.readCard}
+                key={item.id}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (item.remoteImageUrl) {
+                    router.push(`/article-detail?id=${item.id}&image=${encodeURIComponent(item.remoteImageUrl)}` as any);
+                  } else {
+                    router.push(`/article-detail?id=${item.id}&imageIndex=${item.imageIndex}` as any);
+                  }
+                }}
+              >
+                <View style={styles.readImageWrap}>
+                  <Image source={item.image} style={styles.readImage} />
+                  <View style={styles.categoryTag}>
+                    <Text style={styles.categoryText}>{item.category}</Text>
+                  </View>
                 </View>
-              </View>
 
-              <Text style={styles.readTitle}>{item.title}</Text>
+                <Text style={styles.readTitle}>{item.title}</Text>
 
-              <View style={styles.readMetaRow}>
-                <View style={styles.metaGroup}>
-                  <Feather name="user" size={10} color="#B1B9C4" />
-                  <Text style={styles.metaText}>{item.author}</Text>
+                <View style={styles.readMetaRow}>
+                  <View style={styles.metaGroup}>
+                    <Feather name="user" size={10} color="#B1B9C4" />
+                    <Text style={styles.metaText}>{item.author}</Text>
+                  </View>
+                  <View style={styles.metaGroup}>
+                    <Feather name="clock" size={10} color="#B1B9C4" />
+                    <Text style={styles.metaText}>{item.minutes}</Text>
+                  </View>
                 </View>
-                <View style={styles.metaGroup}>
-                  <Feather name="clock" size={10} color="#B1B9C4" />
-                  <Text style={styles.metaText}>{item.minutes}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
 
           <TouchableOpacity
             style={styles.moreButton}
@@ -350,6 +437,127 @@ export default function HomePage() {
             <Text style={styles.moreButtonText}>Explore more articles</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Guided Breathing Exercise Modal */}
+        <Modal
+          visible={isBreathingVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsBreathingVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.exerciseModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Box Breathing</Text>
+                <TouchableOpacity onPress={() => setIsBreathingVisible(false)} style={styles.modalCloseBtn}>
+                  <Feather name="x" size={20} color="#7F8A96" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSubtitle}>Guided technique for instant anxiety relief</Text>
+
+              <View style={styles.breathingCircleContainer}>
+                {/* Expanding and shrinking outer rings */}
+                <Animated.View
+                  style={[
+                    styles.breathingOuterCircle,
+                    {
+                      transform: [{ scale: scaleAnim }],
+                    },
+                  ]}
+                />
+                <View style={styles.breathingInnerCircle}>
+                  <Text style={styles.timerNumber}>{timerCount}</Text>
+                  <Text style={styles.phaseLabel}>{breathingPhase}</Text>
+                </View>
+              </View>
+
+              <Text style={styles.breathingTip}>
+                {breathingPhase === 'Inhale' && 'Slowly breathe in through your nose.'}
+                {breathingPhase === 'Hold (In)' && 'Hold your breath. Relax your shoulders.'}
+                {breathingPhase === 'Exhale' && 'Breathe out slowly through your mouth.'}
+                {breathingPhase === 'Hold (Out)' && 'Hold before the next breath.'}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => setIsBreathingVisible(false)}
+              >
+                <Text style={styles.doneButtonText}>Finish Exercise</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Guided Grounding Exercise Modal */}
+        <Modal
+          visible={isGroundingVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsGroundingVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.exerciseModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>5-4-3-2-1 Grounding</Text>
+                <TouchableOpacity onPress={() => setIsGroundingVisible(false)} style={styles.modalCloseBtn}>
+                  <Feather name="x" size={20} color="#7F8A96" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSubtitle}>Stress relief exercise to connect with the present</Text>
+
+              <View style={styles.groundingStepContainer}>
+                <View style={styles.groundingStepBadge}>
+                  <Text style={styles.groundingStepBadgeText}>{groundingStep}</Text>
+                </View>
+                
+                <Text style={styles.groundingStepAction}>
+                  {groundingStep === 5 && "things you can SEE"}
+                  {groundingStep === 4 && "things you can FEEL"}
+                  {groundingStep === 3 && "things you can HEAR"}
+                  {groundingStep === 2 && "things you can SMELL"}
+                  {groundingStep === 1 && "thing you can TASTE"}
+                </Text>
+
+                <Text style={styles.groundingStepDesc}>
+                  {groundingStep === 5 && "Look around you and name 5 things you can see. A picture on the wall, a window, a chair, or a pen."}
+                  {groundingStep === 4 && "Pay attention to your body and name 4 things you can touch. Your hair, the fabric of your pants, or a table."}
+                  {groundingStep === 3 && "Listen to your surroundings and name 3 things you can hear. Birds outside, traffic, or the hum of a fan."}
+                  {groundingStep === 2 && "Breathe in deeply and name 2 things you can smell. Soap, flowers, grass, food, or coffee."}
+                  {groundingStep === 1 && "Take a moment to name 1 thing you can taste. Mint, water, or the current taste in your mouth."}
+                </Text>
+              </View>
+
+              <View style={styles.groundingProgressContainer}>
+                {[5, 4, 3, 2, 1].map((step) => (
+                  <View
+                    key={step}
+                    style={[
+                      styles.groundingProgressDot,
+                      groundingStep <= step && styles.groundingProgressDotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => {
+                  if (groundingStep > 1) {
+                    setGroundingStep(groundingStep - 1);
+                  } else {
+                    setIsGroundingVisible(false);
+                  }
+                }}
+              >
+                <Text style={styles.doneButtonText}>
+                  {groundingStep > 1 ? "Next Step" : "Complete"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -659,5 +867,175 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: "#707884",
     fontWeight: "600",
+  },
+  noReadsWrap: {
+    paddingVertical: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noReadsText: {
+    fontFamily: "Inter",
+    fontSize: 13,
+    color: "#8A95A3",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  exerciseModalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    alignItems: "center",
+    shadowColor: "#171717",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontFamily: "Inter",
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#1E293B",
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  modalSubtitle: {
+    fontFamily: "Inter",
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  breathingCircleContainer: {
+    width: 200,
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  breathingOuterCircle: {
+    position: "absolute",
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#E2F0FE",
+    opacity: 0.7,
+  },
+  breathingInnerCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#2F88E8",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#2F88E8",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  timerNumber: {
+    fontFamily: "Inter",
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  phaseLabel: {
+    fontFamily: "Inter",
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginTop: 2,
+    textTransform: "uppercase",
+  },
+  breathingTip: {
+    fontFamily: "Inter",
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#334155",
+    textAlign: "center",
+    marginVertical: 16,
+    height: 36,
+  },
+  doneButton: {
+    backgroundColor: "#2F88E8",
+    borderRadius: 14,
+    width: "100%",
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  doneButtonText: {
+    fontFamily: "Inter",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  groundingStepContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+    paddingHorizontal: 10,
+  },
+  groundingStepBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#E0F2FE",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  groundingStepBadgeText: {
+    fontFamily: "Inter",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0369A1",
+  },
+  groundingStepAction: {
+    fontFamily: "Inter",
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    textTransform: "uppercase",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  groundingStepDesc: {
+    fontFamily: "Inter",
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#475569",
+    textAlign: "center",
+    height: 60,
+  },
+  groundingProgressContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginVertical: 16,
+  },
+  groundingProgressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#E2E8F0",
+  },
+  groundingProgressDotActive: {
+    backgroundColor: "#0284C7",
   },
 });

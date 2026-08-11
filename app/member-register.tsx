@@ -1,6 +1,7 @@
 import { getFirebaseConfigError } from "@/lib/firebase";
 import { createMemberAccount, signInMemberWithGoogle } from "@/lib/members";
 import { signInWithNativeGoogle } from "@/lib/native-google-signin";
+import { setExpectedRole } from "@/components/AuthContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Haptics from "expo-haptics";
@@ -59,6 +60,7 @@ export default function MemberRegisterScreen() {
     }
 
     try {
+      setExpectedRole("member");
       await createMemberAccount(trimmedEmail, password);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -69,6 +71,7 @@ export default function MemberRegisterScreen() {
         },
       });
     } catch (error) {
+      setExpectedRole(null);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(
         "Sign Up Failed",
@@ -111,9 +114,11 @@ export default function MemberRegisterScreen() {
 
     try {
       setIsGoogleSubmitting(true);
+      setExpectedRole("member");
       const tokens = await signInWithNativeGoogle();
 
       if (!tokens) {
+        setExpectedRole(null);
         return;
       }
 

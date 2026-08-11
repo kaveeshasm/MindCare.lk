@@ -18,7 +18,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getCounselorProfile, upsertCounselorProfile } from "@/lib/counselors";
-import { auth } from "@/lib/firebase";
+import { auth, storage } from "@/lib/firebase";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 const MAX_BIO_LENGTH = 500;
 
@@ -89,6 +90,7 @@ export default function CounselorProfileScreen() {
   const initialSalutation = initialNameParts.salutation || "Mr";
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
   const [salutation, setSalutation] = useState(initialSalutation);
   const [showSalutations, setShowSalutations] = useState(false);
 
@@ -114,6 +116,7 @@ export default function CounselorProfileScreen() {
     qualifications: [] as string[],
     researchStudies: [] as string[],
     bio: "",
+    avatarUrl: "",
   });
 
   useEffect(() => {
@@ -134,6 +137,9 @@ export default function CounselorProfileScreen() {
       setQualifications(profile.qualifications || []);
       setResearchStudies(profile.researchStudies || []);
       setBio(profile.bio || "");
+      if (profile.avatarUrl) {
+        setAvatarUri(profile.avatarUrl);
+      }
       setInitialSnapshot({
         salutation: profile.salutation || initialSalutation,
         fullName: profile.fullName || initialName,
@@ -141,6 +147,7 @@ export default function CounselorProfileScreen() {
         qualifications: profile.qualifications || [],
         researchStudies: profile.researchStudies || [],
         bio: profile.bio || "",
+        avatarUrl: profile.avatarUrl || "",
       });
     };
 
@@ -181,11 +188,15 @@ export default function CounselorProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.5,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
       setAvatarUri(result.assets[0].uri);
+      if (result.assets[0].base64) {
+        setAvatarBase64(result.assets[0].base64);
+      }
       void Haptics.selectionAsync();
     }
   };
@@ -203,11 +214,15 @@ export default function CounselorProfileScreen() {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.5,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
       setAvatarUri(result.assets[0].uri);
+      if (result.assets[0].base64) {
+        setAvatarBase64(result.assets[0].base64);
+      }
       void Haptics.selectionAsync();
     }
   };
@@ -223,6 +238,7 @@ export default function CounselorProfileScreen() {
               style: "destructive" as const,
               onPress: () => {
                 setAvatarUri(null);
+                setAvatarBase64(null);
                 void Haptics.selectionAsync();
               },
             },
@@ -286,6 +302,14 @@ export default function CounselorProfileScreen() {
 
     try {
       setIsSaving(true);
+
+      let uploadedAvatarUrl = avatarUri || "";
+
+      if (avatarBase64) {
+        uploadedAvatarUrl = `data:image/jpeg;base64,${avatarBase64}`;
+        setAvatarBase64(null); // Reset base64 after successful save
+      }
+
       const savedProfile = await upsertCounselorProfile(currentUser.uid, {
         salutation: normalizeSalutation(salutation) || "Mr",
         fullName: normalizedName,
@@ -293,7 +317,12 @@ export default function CounselorProfileScreen() {
         qualifications,
         researchStudies,
         bio: bio.trim(),
+        avatarUrl: uploadedAvatarUrl,
       });
+
+      if (savedProfile.avatarUrl) {
+        setAvatarUri(savedProfile.avatarUrl);
+      }
 
       setFullName(savedProfile.fullName);
       setInitialSnapshot({
@@ -303,6 +332,7 @@ export default function CounselorProfileScreen() {
         qualifications: savedProfile.qualifications,
         researchStudies: savedProfile.researchStudies,
         bio: savedProfile.bio,
+        avatarUrl: savedProfile.avatarUrl || "",
       });
 
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -335,7 +365,8 @@ export default function CounselorProfileScreen() {
   };
 
   const clearAllDetails = () => {
-    setAvatarUri(null);
+    setAvatarUri(initialSnapshot.avatarUrl || null);
+    setAvatarBase64(null);
     setSalutation(initialSnapshot.salutation);
     setShowSalutations(false);
     setFullName(initialSnapshot.fullName);

@@ -23,7 +23,7 @@ export default function DoctorProfilePage() {
   const name = params.name ?? 'Mrs. Dinithi Jayawardena';
   const title = params.title ?? 'Clinical Psychologist';
   const years = params.years ?? '12 years';
-  const avatar = params.avatar ?? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80';
+  const avatar = params.avatar || '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -41,7 +41,13 @@ export default function DoctorProfilePage() {
           {/* Blue Hero Profile Card */}
           <View style={styles.heroCard}>
             <View style={styles.heroTop}>
-              <Image source={{ uri: avatar }} style={styles.heroAvatar} />
+              {avatar && !avatar.includes('unsplash.com') ? (
+                <Image source={{ uri: avatar }} style={styles.heroAvatar} />
+              ) : (
+                <View style={styles.heroAvatarPlaceholder}>
+                  <FontAwesome name="user-md" size={32} color="#2D7BF0" />
+                </View>
+              )}
               <View style={styles.heroInfo}>
                 <Text style={styles.heroName}>{name}</Text>
                 <Text style={styles.heroSubtitle}>{title}</Text>
@@ -214,6 +220,7 @@ const styles = StyleSheet.create({
   heroCard: { backgroundColor: '#007BFF', borderRadius: 20, padding: 20, marginBottom: 25 },
   heroTop: { flexDirection: 'row', alignItems: 'center' },
   heroAvatar: { width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  heroAvatarPlaceholder: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
   heroInfo: { marginLeft: 15 },
   heroName: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
   heroSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },

@@ -52,3 +52,14 @@ app-example
 backend/__pycache__/
 backend/log.txt
 backend/best_model_params_sinhala.pt
+
+# Hugging Face deployment folder
+mindcare-backend/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+python-env/
+

@@ -42,6 +42,13 @@ export async function signInWithNativeGoogle(): Promise<NativeGoogleTokens | nul
   try {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
+    // Force showing account chooser prompt by signing out the cached Google session first
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // Ignore if user was not already signed in
+    }
+
     const response = await GoogleSignin.signIn();
     if (!isSuccessResponse(response)) {
       return null;

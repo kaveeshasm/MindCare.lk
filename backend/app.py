@@ -39,6 +39,10 @@ def load_dataset():
     with open(DATASET_PATH, 'r', encoding='utf-8') as f:
         return json.load(f)
 
+@app.route('/')
+def index():
+    return jsonify({"status": "healthy", "message": "MindCare.lk Backend API is running!"})
+
 @app.route('/api/recommend', methods=['POST'])
 def recommend_suggestions():
     data = request.json
