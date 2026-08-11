@@ -45,7 +45,8 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for video calls.",
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for audio/video calls."
         }
-      ]
+      ],
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true
