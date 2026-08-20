@@ -236,7 +236,7 @@ export default function HomePage() {
     try {
       const data = await getArticles();
       const articlesArray = Array.isArray(data) ? data : data?.items || [];
-      
+
       console.log(`Successfully fetched ${articlesArray.length} articles from Blogger`);
 
       const fallbackImage = require("../../assets/images/ArticleBackground.png");
@@ -264,7 +264,7 @@ export default function HomePage() {
 
       console.log("FORMATTED MOODS FOR FIRST ARTICLE:", formatted[0]?.moods);
       setReads(formatted);
-      
+
     } catch (error) {
       console.log("API Error in fetchArticles:", error);
     }
